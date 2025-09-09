@@ -5,7 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Collections from "./pages/Collections";
+import CollectionDetail from "./pages/CollectionDetail";
+import Import from "./pages/Import";
+import Search from "./pages/Search";
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -14,11 +21,21 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route element={<ProtectedRoute />}> 
+              <Route path="/collections" element={<Collections />} />
+              <Route path="/collections/:id" element={<CollectionDetail />} />
+              <Route path="/import" element={<Import />} />
+            </Route>
+            <Route path="/search" element={<Search />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -39,20 +39,26 @@ All colors MUST be HSL.
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* MTG-inspired accents */
+    --mana-white: 48 100% 97%;
+    --mana-blue: 210 100% 56%;
+    --mana-black: 0 0% 20%;
+    --mana-red: 0 80% 55%;
+    --mana-green: 134 44% 38%;
+
+    /* Gradients and shadows */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--foreground) / 0.9), hsl(var(--mana-blue) / 0.7));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--mana-green) / 0.7), hsl(var(--mana-red) / 0.7));
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--foreground) / 0.15);
+    --shadow-glow: 0 0 40px hsl(var(--mana-blue) / 0.3);
   }
 
   .dark {
@@ -91,6 +97,11 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(var(--mana-black) / 0.7), hsl(var(--mana-blue) / 0.6));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--mana-green) / 0.6), hsl(var(--mana-red) / 0.6));
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--background) / 0.2);
+    --shadow-glow: 0 0 40px hsl(var(--mana-blue) / 0.35);
   }
 }
 
