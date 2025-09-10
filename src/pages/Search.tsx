@@ -35,11 +35,27 @@ const Search = () => {
         .from("collections")
         .select("id, name, user_id")
         .in("id", ids);
+
+      // Build collection map
       const cmap = new Map((collections || []).map((c: any) => [c.id, c]));
+
+      // Fetch usernames for owners
+      const userIds = Array.from(new Set((collections || []).map((c: any) => c.user_id)));
+      let pmap = new Map<string, any>();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .in("id", userIds);
+        pmap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      }
 
       const grouped: Record<string, any[]> = {};
       for (const r of rows) {
         const col = cmap.get(r.collection_id);
+        const ownerName =
+          (col && pmap.get(col.user_id)?.username) ||
+          (col?.user_id ? col.user_id.slice(0, 8) : "Unknown");
         const key = r.card_name.toLowerCase();
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push({
@@ -47,7 +63,7 @@ const Search = () => {
           set_name: r.set_name,
           quantity: r.quantity,
           collection: col?.name || "Unknown",
-          owner: col?.user_id?.slice(0, 8) || "Unknown",
+          owner: ownerName,
         });
       }
       setResults(grouped);
@@ -81,11 +97,11 @@ const Search = () => {
               <div className="divide-y">
                 {owners.map((o: any, idx: number) => (
                   <div key={idx} className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-5">
-                    <div className="truncate"><span className="text-muted-foreground">Owner:</span> {o.owner}</div>
-                    <div className="truncate"><span className="text-muted-foreground">Collection:</span> {o.collection}</div>
-                    <div className="truncate"><span className="text-muted-foreground">Set:</span> {o.set_name || "-"}</div>
-                    <div className="truncate"><span className="text-muted-foreground">Qty:</span> {o.quantity}</div>
-                    <div className="truncate hidden sm:block text-muted-foreground">Card: {o.card_name}</div>
+                      <div className="truncate"><span className="text-muted-foreground">Owner:</span> {o.owner}</div>
+                      <div className="truncate"><span className="text-muted-foreground">Collection:</span> {o.collection}</div>
+                      <div className="truncate"><span className="text-muted-foreground">Set:</span> {o.set_name || "-"}</div>
+                      <div className="truncate"><span className="text-muted-foreground">Qty:</span> {o.quantity}</div>
+                      <div className="truncate hidden sm:block text-muted-foreground">Card: {o.card_name}</div>
                   </div>
                 ))}
               </div>
