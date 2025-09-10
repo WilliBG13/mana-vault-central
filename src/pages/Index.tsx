@@ -8,13 +8,13 @@ import { Link } from "react-router-dom";
 
 const Index = () => {
   const { user } = useAuth();
-  const supabase = getSupabase();
   const [counts, setCounts] = useState<{ collections: number; cards: number }>({ collections: 0, cards: 0 });
 
   useEffect(() => {
     const load = async () => {
       try {
         if (!user) return;
+        const supabase = getSupabase();
         const { data: collections } = await supabase.from("collections").select("id").eq("user_id", user.id);
         const { count: cardCount } = await supabase
           .from("cards")
@@ -25,11 +25,11 @@ const Index = () => {
           );
         setCounts({ collections: collections?.length || 0, cards: cardCount || 0 });
       } catch (e) {
-        // ignore if schema not ready
+        // ignore if schema not ready or Supabase not configured
       }
     };
     load();
-  }, [supabase, user]);
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background">
