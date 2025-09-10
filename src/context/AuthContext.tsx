@@ -8,6 +8,7 @@ interface AuthContextValue {
   loading: boolean;
   signUp: (email: string, password: string) => Promise<{ error?: string } | void>;
   signIn: (email: string, password: string) => Promise<{ error?: string } | void>;
+  signInWithOAuth: (provider: 'google' | 'github' | 'discord') => Promise<{ error?: string } | void>;
   signOut: () => Promise<void>;
 }
 
@@ -59,7 +60,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = useCallback(async (email: string, password: string) => {
     try {
       const supabase = getSupabase();
-      const { error } = await supabase.auth.signUp({ email, password });
+      const redirectUrl = `${window.location.origin}/`;
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+      if (error) return { error: error.message };
+    } catch {
+      return { error: "Supabase not configured" };
+    }
+  }, []);
+
+  const signInWithOAuth = useCallback(async (provider: 'google' | 'github' | 'discord') => {
+    try {
+      const supabase = getSupabase();
+      const redirectUrl = `${window.location.origin}/`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: redirectUrl
+        }
+      });
       if (error) return { error: error.message };
     } catch {
       return { error: "Supabase not configured" };
@@ -76,8 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const value = useMemo(
-    () => ({ user, session, loading, signIn, signUp, signOut }),
-    [user, session, loading, signIn, signUp, signOut]
+    () => ({ user, session, loading, signIn, signUp, signInWithOAuth, signOut }),
+    [user, session, loading, signIn, signUp, signInWithOAuth, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
