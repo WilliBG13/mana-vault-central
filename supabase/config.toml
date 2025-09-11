@@ -1,1 +1,4 @@
 project_id = "brmayccvnjfshsnaqtim"
+
+[functions.get-card-prices]
+verify_jwt = false

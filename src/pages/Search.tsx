@@ -13,10 +13,27 @@ interface CardRow {
   collection_id: string;
 }
 
+interface CardPrice {
+  name: string;
+  price: number | null;
+  currency: string;
+  error?: string;
+}
+
+interface CardWithPrice {
+  card_name: string;
+  set_name: string | null;
+  quantity: number;
+  collection: string;
+  owner: string;
+  price: number | null;
+}
+
 const Search = () => {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<Record<string, any[]>>({});
+  const [results, setResults] = useState<Record<string, CardWithPrice[]>>({});
+  const [priceLoading, setPriceLoading] = useState(false);
 
   const onSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -50,7 +67,7 @@ const Search = () => {
         pmap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
       }
 
-      const grouped: Record<string, any[]> = {};
+      const grouped: Record<string, CardWithPrice[]> = {};
       for (const r of rows) {
         const col = cmap.get(r.collection_id);
         const ownerName =
@@ -64,11 +81,65 @@ const Search = () => {
           quantity: r.quantity,
           collection: col?.name || "Unknown",
           owner: ownerName,
+          price: null, // Will be fetched separately
         });
       }
       setResults(grouped);
+
+      // Fetch prices for unique card names
+      if (Object.keys(grouped).length > 0) {
+        fetchPrices(Object.keys(grouped));
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPrices = async (cardKeys: string[]) => {
+    setPriceLoading(true);
+    try {
+      const supabase = getSupabase();
+      const cardNames = cardKeys.map(key => 
+        // Use the first card's name from each group for price lookup
+        results[key]?.[0]?.card_name || key
+      );
+
+      const { data, error } = await supabase.functions.invoke('get-card-prices', {
+        body: { cardNames }
+      });
+
+      if (error) {
+        console.error('Error fetching prices:', error);
+        return;
+      }
+
+      if (data?.prices) {
+        // Create a map of card name to price
+        const priceMap = new Map<string, number | null>();
+        data.prices.forEach((priceData: CardPrice) => {
+          priceMap.set(priceData.name.toLowerCase(), priceData.price);
+        });
+
+        // Update results with prices
+        setResults(prevResults => {
+          const updatedResults = { ...prevResults };
+          Object.keys(updatedResults).forEach(key => {
+            const cardName = updatedResults[key][0]?.card_name;
+            if (cardName) {
+              const price = priceMap.get(cardName.toLowerCase());
+              updatedResults[key] = updatedResults[key].map(card => ({
+                ...card,
+                price
+              }));
+            }
+          });
+          return updatedResults;
+        });
+      }
+    } catch (error) {
+      console.error('Error calling price function:', error);
+    } finally {
+      setPriceLoading(false);
     }
   };
 
@@ -92,16 +163,28 @@ const Search = () => {
           {groups.map(([cardKey, owners]) => (
             <div key={cardKey} className="rounded-md border">
               <div className="border-b bg-muted/50 p-3">
-                <h2 className="text-lg font-semibold">{owners[0].card_name}</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">{owners[0].card_name}</h2>
+                  <div className="flex items-center gap-2">
+                    {priceLoading ? (
+                      <span className="text-sm text-muted-foreground">Loading price...</span>
+                    ) : owners[0].price ? (
+                      <span className="text-lg font-semibold text-green-600">${owners[0].price.toFixed(2)}</span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Price unavailable</span>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="divide-y">
-                {owners.map((o: any, idx: number) => (
-                  <div key={idx} className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-5">
+                {owners.map((o: CardWithPrice, idx: number) => (
+                  <div key={idx} className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-6">
                       <div className="truncate"><span className="text-muted-foreground">Owner:</span> {o.owner}</div>
                       <div className="truncate"><span className="text-muted-foreground">Collection:</span> {o.collection}</div>
                       <div className="truncate"><span className="text-muted-foreground">Set:</span> {o.set_name || "-"}</div>
                       <div className="truncate"><span className="text-muted-foreground">Qty:</span> {o.quantity}</div>
-                      <div className="truncate hidden sm:block text-muted-foreground">Card: {o.card_name}</div>
+                      <div className="truncate"><span className="text-muted-foreground">Price:</span> {o.price ? `$${o.price.toFixed(2)}` : "N/A"}</div>
+                      <div className="truncate hidden sm:block text-muted-foreground">Total: {o.price ? `$${(o.price * o.quantity).toFixed(2)}` : "N/A"}</div>
                   </div>
                 ))}
               </div>
