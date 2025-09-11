@@ -81,7 +81,7 @@ const Import = () => {
     const supabase = getSupabase();
     const { data: col, error: cErr } = await supabase
       .from("collections")
-      .insert({ name: name.trim(), user_id: user.id, imported_at: new Date().toISOString() })
+      .insert({ name: name.trim(), user_id: user.id })
       .select("id")
       .single();
     if (cErr || !col) {

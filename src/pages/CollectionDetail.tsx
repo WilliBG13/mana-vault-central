@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 
 const fetchCollection = async (id: string) => {
   const supabase = getSupabase();
-  const { data: collection, error: cErr } = await supabase.from("collections").select("id, name, imported_at").eq("id", id).single();
+  const { data: collection, error: cErr } = await supabase.from("collections").select("id, name, created_at").eq("id", id).single();
   if (cErr) throw cErr;
   const { data: cards, error: kErr } = await supabase
     .from("cards")
@@ -42,7 +42,7 @@ const CollectionDetail = () => {
               <div>
                 <h1 className="text-3xl font-bold">{data!.collection.name}</h1>
                 <p className="text-sm text-muted-foreground">
-                  Imported {new Date(data!.collection.imported_at).toLocaleString()}
+                  Imported {new Date(data!.collection.created_at).toLocaleString()}
                 </p>
               </div>
               <Input placeholder="Filter cards..." value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />

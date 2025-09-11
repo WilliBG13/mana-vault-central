@@ -12,9 +12,9 @@ const fetchCollections = async (userId: string) => {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("collections")
-    .select("id, name, imported_at")
+    .select("id, name, created_at")
     .eq("user_id", userId)
-    .order("imported_at", { ascending: false });
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return data || [];
 };
@@ -59,7 +59,7 @@ const Collections = () => {
               <Card key={c.id}>
                 <CardHeader>
                   <CardTitle>{c.name}</CardTitle>
-                  <CardDescription>Imported {new Date(c.imported_at).toLocaleString()}</CardDescription>
+                  <CardDescription>Imported {new Date(c.created_at).toLocaleString()}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">Click to view contents.</p>
