@@ -6,11 +6,9 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const getConfig = () => {
   const w = window as any;
-  const url = w.__SUPABASE_URL__ || import.meta.env.VITE_SUPABASE_URL;
-  const anon = w.__SUPABASE_ANON_KEY__ || import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (!url || !anon) {
-    console.error("Supabase configuration is missing. Please ensure the project is connected to Supabase and env/globals are set.");
-  }
+  // Prefer runtime globals if injected; otherwise use project defaults
+  const url = w.__SUPABASE_URL__ || "https://brmayccvnjfshsnaqtim.supabase.co";
+  const anon = w.__SUPABASE_ANON_KEY__ || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybWF5Y2N2bmpmc2hzbmFxdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1MDg4MjksImV4cCI6MjA3MzA4NDgyOX0.g6R4V2bHRHcH1IkkMPbyg8HO5tSkTBABFNTBrND8mmo";
   return { url, anon } as { url: string; anon: string };
 };
 

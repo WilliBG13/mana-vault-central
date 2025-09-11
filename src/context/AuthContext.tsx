@@ -22,26 +22,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let unsub: (() => void) | undefined;
-    const init = async () => {
-      try {
-        const supabase = getSupabase();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+    try {
+      const supabase = getSupabase();
+
+      // Subscribe FIRST to avoid missing events
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-          setSession(session);
-          setUser(session?.user ?? null);
-        });
-        unsub = () => listener.subscription.unsubscribe();
-      } catch (e) {
-        console.warn("Supabase config missing; initializing without auth.", e);
-      } finally {
+      });
+      unsub = () => subscription.unsubscribe();
+
+      // THEN get any existing session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
         setLoading(false);
-      }
-    };
-    init();
+      });
+    } catch (e) {
+      console.warn("Supabase config missing; initializing without auth.", e);
+      setLoading(false);
+    }
     return () => {
       unsub?.();
     };
