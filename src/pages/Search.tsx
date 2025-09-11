@@ -45,9 +45,9 @@ const Search = () => {
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, username")
-          .in("id", userIds);
-        pmap = new Map((profiles || []).map((p: any) => [p.id, p]));
+          .select("user_id, username, display_name")
+          .in("user_id", userIds);
+        pmap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
       }
 
       const grouped: Record<string, any[]> = {};
