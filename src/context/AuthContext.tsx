@@ -6,7 +6,7 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error?: string } | void>;
+  signUp: (email: string, password: string, username?: string) => Promise<{ error?: string } | void>;
   signIn: (email: string, password: string) => Promise<{ error?: string } | void>;
   signInWithOAuth: (provider: 'google' | 'github' | 'discord') => Promise<{ error?: string } | void>;
   signOut: () => Promise<void>;
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string, username?: string) => {
     try {
       const supabase = getSupabase();
       const redirectUrl = `${window.location.origin}/`;
@@ -65,7 +65,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email, 
         password,
         options: {
-          emailRedirectTo: redirectUrl
+          emailRedirectTo: redirectUrl,
+          data: {
+            username: username || email.split('@')[0],
+            display_name: username || email.split('@')[0]
+          }
         }
       });
       if (error) return { error: error.message };

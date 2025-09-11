@@ -13,12 +13,13 @@ const Signup = () => {
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const res = await signUp(email.trim(), password);
+    const res = await signUp(email.trim(), password, username.trim());
     setLoading(false);
     if ((res as any)?.error) {
       toast({ title: "Signup failed", description: (res as any).error });
@@ -95,6 +96,17 @@ const Signup = () => {
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input 
+                id="username" 
+                type="text" 
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)} 
+                placeholder="Choose a username"
+                required 
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
