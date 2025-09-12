@@ -6,8 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface CardData {
+  name: string;
+  setName?: string;
+  collectorNumber?: string;
+}
+
 interface CardPriceRequest {
-  cardNames: string[];
+  cards: CardData[];
 }
 
 interface CardPrice {
@@ -29,36 +35,46 @@ serve(async (req) => {
       throw new Error('JustTCG API key not configured');
     }
 
-    const { cardNames }: CardPriceRequest = await req.json();
+    const { cards }: CardPriceRequest = await req.json();
     
-    if (!cardNames || !Array.isArray(cardNames)) {
-      throw new Error('Invalid request: cardNames array is required');
+    if (!cards || !Array.isArray(cards)) {
+      throw new Error('Invalid request: cards array is required');
     }
 
-    console.log(`Fetching prices for ${cardNames.length} cards`);
+    console.log(`Fetching prices for ${cards.length} cards`);
 
     // Fetch prices for each card
-    const pricePromises = cardNames.map(async (cardName): Promise<CardPrice> => {
+    const pricePromises = cards.map(async (cardData): Promise<CardPrice> => {
       try {
-        // JustTCG API call - using a common pattern for TCG APIs
-        const searchUrl = `https://api.justtcg.com/v1/cards/search`;
-        const response = await fetch(searchUrl, {
-          method: 'POST',
+        // JustTCG API call - using GET with query parameters
+        const url = new URL('https://api.justtcg.com/v1/cards');
+        
+        // Build search query with available card data
+        let searchQuery = cardData.name;
+        if (cardData.setName) {
+          searchQuery += ` set:"${cardData.setName}"`;
+        }
+        if (cardData.collectorNumber) {
+          searchQuery += ` number:"${cardData.collectorNumber}"`;
+        }
+        
+        url.searchParams.append('q', searchQuery);
+        url.searchParams.append('limit', '1');
+        
+        console.log(`Searching for: ${searchQuery}`);
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
           headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            'X-API-Key': apiKey,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            name: cardName,
-            game: 'magic', // Assuming Magic: The Gathering
-            limit: 1
-          }),
         });
 
         if (!response.ok) {
-          console.error(`API error for ${cardName}: ${response.status}`);
+          console.error(`API error for ${cardData.name}: ${response.status} - ${await response.text()}`);
           return {
-            name: cardName,
+            name: cardData.name,
             price: null,
             currency: 'USD',
             error: `API error: ${response.status}`
@@ -67,24 +83,29 @@ serve(async (req) => {
 
         const data = await response.json();
         
-        // Extract price from API response
+        // Extract price from JustTCG API response
         let price = null;
-        if (data.results && data.results.length > 0) {
-          const card = data.results[0];
-          // Common price field names in TCG APIs
-          price = card.market_price || card.price || card.mid_price || card.avg_price;
+        if (data.data && data.data.length > 0) {
+          const card = data.data[0];
+          // Get price from the first variant (usually Near Mint condition)
+          if (card.variants && card.variants.length > 0) {
+            // Look for Near Mint condition first, fallback to first available
+            const nmVariant = card.variants.find(v => v.condition === 'Near Mint' || v.condition === 'NM');
+            const variant = nmVariant || card.variants[0];
+            price = variant.price;
+          }
         }
 
         return {
-          name: cardName,
-          price: price ? parseFloat(price) : null,
+          name: cardData.name,
+          price: price ? parseFloat(price.toString()) : null,
           currency: 'USD'
         };
 
       } catch (error) {
-        console.error(`Error fetching price for ${cardName}:`, error);
+        console.error(`Error fetching price for ${cardData.name}:`, error);
         return {
-          name: cardName,
+          name: cardData.name,
           price: null,
           currency: 'USD',
           error: error.message

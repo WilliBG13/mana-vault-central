@@ -99,13 +99,17 @@ const Search = () => {
     setPriceLoading(true);
     try {
       const supabase = getSupabase();
-      const cardNames = cardKeys.map(key => 
-        // Use the first card's name from each group for price lookup
-        results[key]?.[0]?.card_name || key
-      );
+      const cards = cardKeys.map(key => {
+        const firstCard = results[key]?.[0];
+        return {
+          name: firstCard?.card_name || key,
+          setName: firstCard?.set_name || undefined,
+          collectorNumber: undefined // We don't have collector number in our current data
+        };
+      });
 
       const { data, error } = await supabase.functions.invoke('get-card-prices', {
-        body: { cardNames }
+        body: { cards }
       });
 
       if (error) {
