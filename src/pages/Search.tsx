@@ -104,14 +104,23 @@ const Search = () => {
     setPriceLoading(true);
     try {
       const supabase = getSupabase();
-      const cards = cardKeys.map(key => {
-        const firstCard = results[key]?.[0];
-        return {
-          name: firstCard?.card_name || key,
-          setName: firstCard?.set_name || undefined,
-          collectorNumber: firstCard?.collector_number || undefined
-        };
+      
+      // Get all unique card variants (name + set + collector number combinations)
+      const uniqueCards = new Map<string, any>();
+      cardKeys.forEach(key => {
+        results[key]?.forEach(card => {
+          const variantKey = `${card.card_name}|${card.set_name || ''}|${card.collector_number || ''}`;
+          if (!uniqueCards.has(variantKey)) {
+            uniqueCards.set(variantKey, {
+              name: card.card_name,
+              setName: card.set_name || undefined,
+              collectorNumber: card.collector_number || undefined
+            });
+          }
+        });
       });
+
+      const cards = Array.from(uniqueCards.values());
 
       const { data, error } = await supabase.functions.invoke('get-card-prices', {
         body: { cards }
@@ -123,24 +132,30 @@ const Search = () => {
       }
 
       if (data?.prices) {
-        // Create a map of card name to price
+        // Create a map of card variant to price
         const priceMap = new Map<string, number | null>();
         data.prices.forEach((priceData: CardPrice) => {
-          priceMap.set(priceData.name.toLowerCase(), priceData.price);
+          // Find the matching card variant
+          const matchingVariant = Array.from(uniqueCards.entries()).find(([, cardData]) => 
+            cardData.name === priceData.name
+          );
+          if (matchingVariant) {
+            priceMap.set(matchingVariant[0], priceData.price);
+          }
         });
 
         // Update results with prices
         setResults(prevResults => {
           const updatedResults = { ...prevResults };
           Object.keys(updatedResults).forEach(key => {
-            const cardName = updatedResults[key][0]?.card_name;
-            if (cardName) {
-              const price = priceMap.get(cardName.toLowerCase());
-              updatedResults[key] = updatedResults[key].map(card => ({
+            updatedResults[key] = updatedResults[key].map(card => {
+              const variantKey = `${card.card_name}|${card.set_name || ''}|${card.collector_number || ''}`;
+              const price = priceMap.get(variantKey);
+              return {
                 ...card,
                 price
-              }));
-            }
+              };
+            });
           });
           return updatedResults;
         });
@@ -177,11 +192,16 @@ const Search = () => {
                   <div className="flex items-center gap-2">
                     {priceLoading ? (
                       <span className="text-sm text-muted-foreground">Loading price...</span>
-                    ) : owners[0].price ? (
-                      <span className="text-lg font-semibold text-green-600">${owners[0].price.toFixed(2)}</span>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">Price unavailable</span>
-                    )}
+                    ) : (() => {
+                      const totalValue = owners.reduce((sum, card) => {
+                        return sum + (card.price ? card.price * card.quantity : 0);
+                      }, 0);
+                      return totalValue > 0 ? (
+                        <span className="text-lg font-semibold text-green-600">${totalValue.toFixed(2)}</span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Price unavailable</span>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
