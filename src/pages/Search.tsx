@@ -191,7 +191,7 @@ const Search = () => {
                       <div className="truncate"><span className="text-muted-foreground">Owner:</span> {o.owner}</div>
                       <div className="truncate"><span className="text-muted-foreground">Collection:</span> {o.collection}</div>
                       <div className="truncate"><span className="text-muted-foreground">Set:</span> {o.set_name || "-"}</div>
-                      <div className="truncate"><span className="text-muted-foreground">Set #:</span> {o.collector_number || "-"}</div>
+                      <div className="truncate"><span className="text-muted-foreground">Card #:</span> {o.collector_number || "-"}</div>
                       <div className="truncate"><span className="text-muted-foreground">Qty:</span> {o.quantity}</div>
                       <div className="truncate"><span className="text-muted-foreground">Price:</span> {o.price ? `$${o.price.toFixed(2)}` : "N/A"}</div>
                       <div className="truncate hidden sm:block text-muted-foreground">Total: {o.price ? `$${(o.price * o.quantity).toFixed(2)}` : "N/A"}</div>

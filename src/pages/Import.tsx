@@ -13,6 +13,7 @@ interface ParsedRow {
   card_name: string;
   quantity: number;
   set_name?: string | null;
+  collector_number?: string | null;
 }
 
 const normalizeRow = (row: Record<string, any>): ParsedRow | null => {
@@ -25,15 +26,22 @@ const normalizeRow = (row: Record<string, any>): ParsedRow | null => {
   const nameKey = keys["name"]; // shared
   const qtyKey = keys["quantity"] || keys["count"];
   const setKey = keys["edition"] || keys["set"] || keys["set name"];
+  const collectorKey = keys["collector number"] || keys["card number"];
 
   if (!nameKey || !qtyKey) return null;
 
   const name = String(row[nameKey]).trim();
   const qty = Number(row[qtyKey]);
   const set = setKey ? String(row[setKey]).trim() : null;
+  const collectorNumber = collectorKey ? String(row[collectorKey]).trim() : null;
 
   if (!name || Number.isNaN(qty)) return null;
-  return { card_name: name, quantity: Math.max(0, Math.floor(qty)), set_name: set };
+  return { 
+    card_name: name, 
+    quantity: Math.max(0, Math.floor(qty)), 
+    set_name: set,
+    collector_number: collectorNumber 
+  };
 };
 
 const Import = () => {
@@ -139,6 +147,7 @@ const Import = () => {
                     <tr>
                       <th className="p-2">Card</th>
                       <th className="p-2">Set</th>
+                      <th className="p-2">Card #</th>
                       <th className="p-2">Qty</th>
                     </tr>
                   </thead>
@@ -147,6 +156,7 @@ const Import = () => {
                       <tr key={i} className="border-t">
                         <td className="p-2">{r.card_name}</td>
                         <td className="p-2">{r.set_name || "-"}</td>
+                        <td className="p-2">{r.collector_number || "-"}</td>
                         <td className="p-2">{r.quantity}</td>
                       </tr>
                     ))}
