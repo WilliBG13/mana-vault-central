@@ -48,6 +48,8 @@ const Search = () => {
         .ilike("card_name", `%${q}%`)
         .limit(500);
 
+      console.log("Search results:", cards?.slice(0, 3)); // Debug log
+
       const rows = (cards as CardRow[]) || [];
       const ids = Array.from(new Set(rows.map((r) => r.collection_id)));
       const { data: collections } = await supabase
