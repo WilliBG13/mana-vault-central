@@ -10,6 +10,7 @@ interface CardRow {
   card_name: string;
   quantity: number;
   set_name: string | null;
+  collector_number: string | null;
   collection_id: string;
 }
 
@@ -23,6 +24,7 @@ interface CardPrice {
 interface CardWithPrice {
   card_name: string;
   set_name: string | null;
+  collector_number: string | null;
   quantity: number;
   collection: string;
   owner: string;
@@ -42,7 +44,7 @@ const Search = () => {
     try {
       const { data: cards } = await supabase
         .from("cards")
-        .select("id, card_name, quantity, set_name, collection_id")
+        .select("id, card_name, quantity, set_name, collector_number, collection_id")
         .ilike("card_name", `%${q}%`)
         .limit(500);
 
@@ -78,6 +80,7 @@ const Search = () => {
         grouped[key].push({
           card_name: r.card_name,
           set_name: r.set_name,
+          collector_number: r.collector_number,
           quantity: r.quantity,
           collection: col?.name || "Unknown",
           owner: ownerName,
@@ -104,7 +107,7 @@ const Search = () => {
         return {
           name: firstCard?.card_name || key,
           setName: firstCard?.set_name || undefined,
-          collectorNumber: undefined // We don't have collector number in our current data
+          collectorNumber: firstCard?.collector_number || undefined
         };
       });
 
@@ -182,10 +185,11 @@ const Search = () => {
               </div>
               <div className="divide-y">
                 {owners.map((o: CardWithPrice, idx: number) => (
-                  <div key={idx} className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-6">
+                  <div key={idx} className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-7">
                       <div className="truncate"><span className="text-muted-foreground">Owner:</span> {o.owner}</div>
                       <div className="truncate"><span className="text-muted-foreground">Collection:</span> {o.collection}</div>
                       <div className="truncate"><span className="text-muted-foreground">Set:</span> {o.set_name || "-"}</div>
+                      <div className="truncate"><span className="text-muted-foreground">Set #:</span> {o.collector_number || "-"}</div>
                       <div className="truncate"><span className="text-muted-foreground">Qty:</span> {o.quantity}</div>
                       <div className="truncate"><span className="text-muted-foreground">Price:</span> {o.price ? `$${o.price.toFixed(2)}` : "N/A"}</div>
                       <div className="truncate hidden sm:block text-muted-foreground">Total: {o.price ? `$${(o.price * o.quantity).toFixed(2)}` : "N/A"}</div>
