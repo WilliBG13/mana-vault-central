@@ -132,15 +132,14 @@ const Search = () => {
       }
 
       if (data?.prices) {
-        // Create a map of card variant to price
+        // Create a map of card variant to price using array indices
         const priceMap = new Map<string, number | null>();
-        data.prices.forEach((priceData: CardPrice) => {
-          // Find the matching card variant
-          const matchingVariant = Array.from(uniqueCards.entries()).find(([, cardData]) => 
-            cardData.name === priceData.name
-          );
-          if (matchingVariant) {
-            priceMap.set(matchingVariant[0], priceData.price);
+        const cardVariants = Array.from(uniqueCards.entries());
+        
+        data.prices.forEach((priceData: CardPrice, index: number) => {
+          // Match by index since prices are returned in same order as sent
+          if (cardVariants[index]) {
+            priceMap.set(cardVariants[index][0], priceData.price);
           }
         });
 
