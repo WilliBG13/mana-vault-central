@@ -93,22 +93,25 @@ const Search = () => {
 
       // Fetch prices for unique card names
       if (Object.keys(grouped).length > 0) {
-        fetchPrices(Object.keys(grouped));
+        console.log('Invoking fetchPrices with grouped snapshot', { groups: Object.keys(grouped), totalGroups: Object.keys(grouped).length });
+        fetchPrices(Object.keys(grouped), grouped);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchPrices = async (cardKeys: string[]) => {
+  const fetchPrices = async (cardKeys: string[], groupedSnapshot?: Record<string, CardWithPrice[]>) => {
     setPriceLoading(true);
     try {
       const supabase = getSupabase();
+      const source = groupedSnapshot || results;
+      console.log('fetchPrices start', { cardKeysCount: cardKeys.length, usingSnapshot: !!groupedSnapshot });
       
       // Get all unique card variants (name + set + collector number combinations)
       const uniqueCards = new Map<string, any>();
       cardKeys.forEach(key => {
-        results[key]?.forEach(card => {
+        source[key]?.forEach(card => {
           const variantKey = `${card.card_name}|${card.set_name || ''}|${card.collector_number || ''}`;
           if (!uniqueCards.has(variantKey)) {
             uniqueCards.set(variantKey, {
@@ -121,6 +124,7 @@ const Search = () => {
       });
 
       const cards = Array.from(uniqueCards.values());
+      console.log('Price request card variants', { count: cards.length, cards });
 
       const { data, error } = await supabase.functions.invoke('get-card-prices', {
         body: { cards }
@@ -129,6 +133,11 @@ const Search = () => {
       if (error) {
         console.error('Error fetching prices:', error);
         return;
+      }
+
+      console.log('Price response', { count: data?.prices?.length ?? 0, prices: data?.prices });
+      if ((data?.prices?.length ?? 0) !== cards.length) {
+        console.warn('Price response length mismatch', { requested: cards.length, received: data?.prices?.length ?? 0 });
       }
 
       if (data?.prices) {
@@ -142,6 +151,7 @@ const Search = () => {
             priceMap.set(cardVariants[index][0], priceData.price);
           }
         });
+        console.log('Price map entries', Array.from(priceMap.entries()));
 
         // Update results with prices
         setResults(prevResults => {
@@ -156,6 +166,10 @@ const Search = () => {
               };
             });
           });
+          const pricedStats = Object.fromEntries(
+            Object.entries(updatedResults).map(([k, arr]) => [k, arr.filter(c => c.price != null).length])
+          );
+          console.log('Updated results price stats', pricedStats);
           return updatedResults;
         });
       }
@@ -195,6 +209,7 @@ const Search = () => {
                       const totalValue = owners.reduce((sum, card) => {
                         return sum + (card.price ? card.price * card.quantity : 0);
                       }, 0);
+                      console.log('Computed total value', { cardKey, totalValue, owners });
                       return totalValue > 0 ? (
                         <span className="text-lg font-semibold text-green-600">${totalValue.toFixed(2)}</span>
                       ) : (
