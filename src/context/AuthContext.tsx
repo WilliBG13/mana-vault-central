@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabaseClient";
 
@@ -14,7 +14,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Supabase client will be retrieved lazily to avoid early crashes when config isn't injected yet
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
