@@ -89,38 +89,61 @@ serve(async (req) => {
         console.log(`Raw API Response for ${cardData.name}:`, JSON.stringify(data, null, 2));
         
         // Extract price from JustTCG API response using provided structure
-        let price = null;
-        
-        // Check multiple possible response structures
-        if (data && Array.isArray(data) && data.length > 0) {
-          // Direct array response
-          const card = data[0];
-          console.log(`Found card data (array):`, JSON.stringify(card, null, 2));
-          if (card.variants && card.variants.length > 0) {
-            const nmVariant = card.variants.find(v => v.condition === 'Near Mint' || v.condition === 'NM');
-            const variant = nmVariant || card.variants[0];
-            price = variant.price;
-            console.log(`Extracted price from variant: ${price} (condition: ${variant.condition})`);
+        let price: number | null = null;
+
+        // Normalize helpers
+        const norm = (v?: string) => (v || "").toLowerCase().trim();
+        const requestedName = norm(cardData.name);
+        const requestedSet = norm(cardData.setName || "");
+        const requestedNum = (cardData.collectorNumber || "").toString().trim();
+
+        // Build a flat list of candidate cards from various possible shapes
+        const candidates: any[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+            ? data.data
+            : data ? [data] : [];
+
+        // Choose the best matching card
+        let matched: any | undefined = candidates.find((c) => {
+          const cname = norm(c.name);
+          const cset = norm(c.set || c.setName);
+          const cnum = (c.number || c.collectorNumber || c.details?.number || "").toString().trim();
+          return cname === requestedName && cnum === requestedNum && (!!requestedSet ? cset === requestedSet : true);
+        });
+
+        if (!matched) {
+          // Fallback: match by name + number only
+          matched = candidates.find((c) => {
+            const cname = norm(c.name);
+            const cnum = (c.number || c.collectorNumber || c.details?.number || "").toString().trim();
+            return cname === requestedName && cnum === requestedNum;
+          });
+        }
+
+        if (!matched) {
+          // Fallback: match by exact name
+          matched = candidates.find((c) => norm(c.name) === requestedName);
+        }
+
+        if (matched) {
+          console.log(`Matched card for ${cardData.name}:`, JSON.stringify({
+            matchedName: matched.name,
+            matchedSet: matched.set || matched.setName,
+            matchedNumber: matched.number || matched.collectorNumber || matched.details?.number,
+          }));
+
+          const variants = matched.variants || [];
+          if (variants.length > 0) {
+            const nmVariant = variants.find((v: any) => v.condition === 'Near Mint' || v.condition === 'NM' || v.condition === 'Excellent');
+            const variant = nmVariant || variants[0];
+            price = variant?.price != null ? Number(variant.price) : null;
+            console.log(`Using variant for ${cardData.name}:`, JSON.stringify({ condition: variant?.condition, price }));
+          } else {
+            console.log(`No variants on matched card for ${cardData.name}`);
           }
-        } else if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
-          // Wrapped in data property
-          const card = data.data[0];
-          console.log(`Found card data (data.array):`, JSON.stringify(card, null, 2));
-          if (card.variants && card.variants.length > 0) {
-            const nmVariant = card.variants.find(v => v.condition === 'Near Mint' || v.condition === 'NM');
-            const variant = nmVariant || card.variants[0];
-            price = variant.price;
-            console.log(`Extracted price from variant: ${price} (condition: ${variant.condition})`);
-          }
-        } else if (data && data.variants && data.variants.length > 0) {
-          // Direct card object
-          console.log(`Found direct card with variants:`, JSON.stringify(data, null, 2));
-          const nmVariant = data.variants.find(v => v.condition === 'Near Mint' || v.condition === 'NM');
-          const variant = nmVariant || data.variants[0];
-          price = variant.price;
-          console.log(`Extracted price from variant: ${price} (condition: ${variant.condition})`);
         } else {
-          console.log(`No matching data structure found for ${cardData.name}. Response keys:`, Object.keys(data || {}));
+          console.log(`No candidate matched for ${cardData.name}. Candidates:`, candidates.map((c) => ({ name: c?.name, set: c?.set || c?.setName, number: c?.number || c?.collectorNumber })).slice(0, 5));
         }
 
         return {
