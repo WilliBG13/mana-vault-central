@@ -46,27 +46,25 @@ serve(async (req) => {
     // Fetch prices for each card
     const pricePromises = cards.map(async (cardData): Promise<CardPrice> => {
       try {
-        // JustTCG API call - using GET with query parameters
+        // JustTCG API call - using proper GET parameters
         const url = new URL('https://api.justtcg.com/v1/cards');
         
-        // Build search query with available card data
-        let searchQuery = cardData.name;
+        // Use the correct parameters mapping
+        url.searchParams.append('name', cardData.name);
+        url.searchParams.append('game', 'Magic: The Gathering');
         if (cardData.setName) {
-          searchQuery += ` set:"${cardData.setName}"`;
+          url.searchParams.append('set', cardData.setName);
         }
         if (cardData.collectorNumber) {
-          searchQuery += ` number:"${cardData.collectorNumber}"`;
+          url.searchParams.append('number', cardData.collectorNumber);
         }
         
-        url.searchParams.append('q', searchQuery);
-        url.searchParams.append('limit', '1');
-        
-        console.log(`Searching for: ${searchQuery}`);
+        console.log(`Fetching price for: ${cardData.name} (${cardData.setName || 'Unknown Set'} #${cardData.collectorNumber || 'N/A'})`);
 
         const response = await fetch(url.toString(), {
           method: 'GET',
           headers: {
-            'X-API-Key': apiKey,
+            'x-api-key': apiKey,
             'Content-Type': 'application/json',
           },
         });
@@ -82,18 +80,24 @@ serve(async (req) => {
         }
 
         const data = await response.json();
+        console.log(`API Response for ${cardData.name}:`, JSON.stringify(data, null, 2));
         
-        // Extract price from JustTCG API response
+        // Extract price from JustTCG API response using provided structure
         let price = null;
-        if (data.data && data.data.length > 0) {
-          const card = data.data[0];
-          // Get price from the first variant (usually Near Mint condition)
+        if (data && data.length > 0) {
+          const card = data[0];
+          // Get price from variants array
           if (card.variants && card.variants.length > 0) {
             // Look for Near Mint condition first, fallback to first available
             const nmVariant = card.variants.find(v => v.condition === 'Near Mint' || v.condition === 'NM');
             const variant = nmVariant || card.variants[0];
             price = variant.price;
+            console.log(`Found price for ${cardData.name}: ${price} (condition: ${variant.condition})`);
+          } else {
+            console.log(`No variants found for ${cardData.name}`);
           }
+        } else {
+          console.log(`No data returned for ${cardData.name}`);
         }
 
         return {
