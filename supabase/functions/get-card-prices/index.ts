@@ -62,6 +62,8 @@ serve(async (req) => {
         
         console.log(`Fetching price for: ${cardData.name} (${cardData.setName || 'Unknown Set'} #${cardData.collectorNumber || 'N/A'}) - Near Mint condition`);
 
+        console.log(`API URL: ${url.toString()}`);
+
         const response = await fetch(url.toString(), {
           method: 'GET',
           headers: {
@@ -70,35 +72,55 @@ serve(async (req) => {
           },
         });
 
+        console.log(`API Response Status: ${response.status}`);
+        
         if (!response.ok) {
-          console.error(`API error for ${cardData.name}: ${response.status} - ${await response.text()}`);
+          const errorText = await response.text();
+          console.error(`API error for ${cardData.name}: ${response.status} - ${errorText}`);
           return {
             name: cardData.name,
             price: null,
             currency: 'USD',
-            error: `API error: ${response.status}`
+            error: `API error: ${response.status} - ${errorText}`
           };
         }
 
         const data = await response.json();
-        console.log(`API Response for ${cardData.name}:`, JSON.stringify(data, null, 2));
+        console.log(`Raw API Response for ${cardData.name}:`, JSON.stringify(data, null, 2));
         
         // Extract price from JustTCG API response using provided structure
         let price = null;
-        if (data && data.length > 0) {
+        
+        // Check multiple possible response structures
+        if (data && Array.isArray(data) && data.length > 0) {
+          // Direct array response
           const card = data[0];
-          // Get price from variants array
+          console.log(`Found card data (array):`, JSON.stringify(card, null, 2));
           if (card.variants && card.variants.length > 0) {
-            // Look for Near Mint condition first, fallback to first available
             const nmVariant = card.variants.find(v => v.condition === 'Near Mint' || v.condition === 'NM');
             const variant = nmVariant || card.variants[0];
             price = variant.price;
-            console.log(`Found price for ${cardData.name}: ${price} (condition: ${variant.condition})`);
-          } else {
-            console.log(`No variants found for ${cardData.name}`);
+            console.log(`Extracted price from variant: ${price} (condition: ${variant.condition})`);
           }
+        } else if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
+          // Wrapped in data property
+          const card = data.data[0];
+          console.log(`Found card data (data.array):`, JSON.stringify(card, null, 2));
+          if (card.variants && card.variants.length > 0) {
+            const nmVariant = card.variants.find(v => v.condition === 'Near Mint' || v.condition === 'NM');
+            const variant = nmVariant || card.variants[0];
+            price = variant.price;
+            console.log(`Extracted price from variant: ${price} (condition: ${variant.condition})`);
+          }
+        } else if (data && data.variants && data.variants.length > 0) {
+          // Direct card object
+          console.log(`Found direct card with variants:`, JSON.stringify(data, null, 2));
+          const nmVariant = data.variants.find(v => v.condition === 'Near Mint' || v.condition === 'NM');
+          const variant = nmVariant || data.variants[0];
+          price = variant.price;
+          console.log(`Extracted price from variant: ${price} (condition: ${variant.condition})`);
         } else {
-          console.log(`No data returned for ${cardData.name}`);
+          console.log(`No matching data structure found for ${cardData.name}. Response keys:`, Object.keys(data || {}));
         }
 
         return {
