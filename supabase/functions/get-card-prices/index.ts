@@ -52,6 +52,7 @@ serve(async (req) => {
         // Use the correct parameters mapping
         url.searchParams.append('name', cardData.name);
         url.searchParams.append('game', 'Magic: The Gathering');
+        url.searchParams.append('condition', 'Near Mint'); // Always use Near Mint (excellent) condition
         if (cardData.setName) {
           url.searchParams.append('set', cardData.setName);
         }
@@ -59,7 +60,7 @@ serve(async (req) => {
           url.searchParams.append('number', cardData.collectorNumber);
         }
         
-        console.log(`Fetching price for: ${cardData.name} (${cardData.setName || 'Unknown Set'} #${cardData.collectorNumber || 'N/A'})`);
+        console.log(`Fetching price for: ${cardData.name} (${cardData.setName || 'Unknown Set'} #${cardData.collectorNumber || 'N/A'}) - Near Mint condition`);
 
         const response = await fetch(url.toString(), {
           method: 'GET',
