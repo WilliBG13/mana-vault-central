@@ -83,7 +83,7 @@ serve(async (req) => {
         }
 
         const data = await response.json();
-        console.log(`Raw API Response for ${cardData.name}:`, JSON.stringify(data, null, 2));
+        console.log(`Raw API Response for ${cardData.name}:`, JSON.stringify(data, null, 1));
         
         // Extract price from JustTCG API response using provided structure
         let price: number | null = null;
