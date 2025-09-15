@@ -50,20 +50,17 @@ serve(async (req) => {
         const url = new URL('https://api.justtcg.com/v1/cards');
         
         // Use the correct parameters mapping
-        url.searchParams.append('name', cardData.name);
-        url.searchParams.append('game', 'Magic: The Gathering');
-        url.searchParams.append('condition', 'Near Mint'); // Always use Near Mint (excellent) condition
-        if (cardData.setName) {
-          url.searchParams.append('set', cardData.setName);
-        }
-        if (cardData.collectorNumber) {
-          url.searchParams.append('number', cardData.collectorNumber);
-        }
-        
+        url.searchParams.append('q=', cardData.name, '&');
+        url.searchParams.append('game=', 'mtg', '&');
+        url.searchParams.append('condition=', 'Lightly%20Played', '&'); // Always use Near Mint (excellent) condition
+        url.searchParams.append('set=', cardData.setName, '&');
+        url.searchParams.append('index=', '10'); //return top 10 searches
+       
         console.log(`Fetching price for: ${cardData.name} (${cardData.setName || 'Unknown Set'} #${cardData.collectorNumber || 'N/A'}) - Near Mint condition`);
 
         console.log(`API URL: ${url.toString()}`);
 
+        // curl -X GET "https://api.justtcg.com/v1/cards?q=Counterspell&game=mtg&condition=Near%20Mint&printing=1st%20Edition&limit=1" \ -H "X-API-Key: your_api_key_here"
         const response = await fetch(url.toString(), {
           method: 'GET',
           headers: {
