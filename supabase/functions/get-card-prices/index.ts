@@ -84,7 +84,7 @@ serve(async (req) => {
         }
 
         const data = await response.json();
-        console.log(`Raw API Response for ${cardData.name}:`, JSON.stringify(data, null, 1));
+        console.log(`Raw API Response for ${cardData.name}:`, JSON.stringify(data, null, 2));
         
         // Extract price from JustTCG API response using provided structure
         let price: number | null = null;
@@ -101,7 +101,7 @@ serve(async (req) => {
           : Array.isArray(data?.data)
             ? data.data
             : data ? [data] : [];
-        console.log(`${candidates}`);
+        console.log(`candidates:`, JSON.stringify(candidates, null, 2));
 
         // Choose the best matching card
         let matched: any | undefined = candidates.find((c) => {
@@ -135,7 +135,7 @@ serve(async (req) => {
             const nmVariant = variants.find((v: any) => v.number === cardData.collectorNumber);
             const variant = nmVariant || variants[0];
             price = variant?.price != null ? Number(variant.price) : null;
-            console.log(`${variants}`);
+            console.log(`variants`, JSON.stringify(variants, null, 2));
             console.log(`Using Variant card number ${variant?.number}`);
             console.log(`Using variant for ${cardData.name}:`, JSON.stringify({ condition: variant?.condition, price }));
           } else {
