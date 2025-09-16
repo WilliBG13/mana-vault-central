@@ -129,12 +129,12 @@ serve(async (req) => {
             matchedSet: matched.set || matched.setName,
           }));
 
-          const variants = matched.variants || [];
+          const variants = candidates.variants || [];
           if (variants.length > 0) {
             const nmVariant = variants.find((v: any) => v.number === cardData.collectorNumber);
             const variant = nmVariant || variants[0];
             price = variant?.price != null ? Number(variant.price) : null;
-            console.log(`Using Vairant card number ${variant?.number}`);
+            console.log(`Using Variant card number ${variant?.number}`);
             console.log(`Using variant for ${cardData.name}:`, JSON.stringify({ condition: variant?.condition, price }));
           } else {
             console.log(`No variants on matched card for ${cardData.name}`);
