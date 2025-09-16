@@ -101,6 +101,7 @@ serve(async (req) => {
           : Array.isArray(data?.data)
             ? data.data
             : data ? [data] : [];
+        console.log(`${candidates}`);
 
         // Choose the best matching card
         let matched: any | undefined = candidates.find((c) => {
@@ -134,6 +135,7 @@ serve(async (req) => {
             const nmVariant = variants.find((v: any) => v.number === cardData.collectorNumber);
             const variant = nmVariant || variants[0];
             price = variant?.price != null ? Number(variant.price) : null;
+            console.log(`${variants}`);
             console.log(`Using Variant card number ${variant?.number}`);
             console.log(`Using variant for ${cardData.name}:`, JSON.stringify({ condition: variant?.condition, price }));
           } else {
