@@ -134,6 +134,8 @@ serve(async (req) => {
         // Flatten into variants that carry the parent’s number
         const candidates: VariantCandidate[] = rawList.reduce<VariantCandidate[]>((acc, card) => {
           const parentNumber = (card.number ?? "").toString().trim();
+          const parentSet = (card.set ?? "").toString().trim();
+          const parentName = (card.name ?? "").toString().trim();
           const variantsArray: RawVariant[] =
             Array.isArray(card.variants)
             ? card.variants
@@ -146,6 +148,8 @@ serve(async (req) => {
             acc.push({
               id: variant.id,
               number: parentNumber,
+              set: parentSet,
+              name: parentName,
               condition: variant.condition,
               printing: variant.printing,
               price: variant.price,
