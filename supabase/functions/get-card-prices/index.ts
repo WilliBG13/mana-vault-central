@@ -121,7 +121,7 @@ serve(async (req) => {
           printing: string;
           price: number;
         }
-        const rawData: RawCandidate[] = /* your JSON */ [];
+        const rawData: RawCandidate[] = data;
         // Flatten into variants that carry the parent’s number
         const candidates: VariantCandidate[] = rawData.flatMap(card =>
           card.variants.map(variant => ({
