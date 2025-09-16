@@ -190,9 +190,10 @@ serve(async (req) => {
           }));
           
           if (candidates.length > 0) {
-            const nmVariant = candidates.find((v: any) => v.number === cardData.collectorNumber && v.printing === `normal`); //make sure to change printing once import mapping fixed
+            const nmVariant = candidates.find((v: any) => v.number === requestedNum && v.printing === `normal`); //make sure to change printing once import mapping fixed
             const variant = nmVariant || candidates[0];
             price = variant?.price != null ? Number(variant.price) : null;
+            console.log(`nmVariant output: ${nmVariant}`);
             console.log(`Using Variant card number ${variant?.number}`);
             console.log(`Using variant for ${cardData.name}:`, JSON.stringify({ condition: variant?.condition, price }));
           } else {
