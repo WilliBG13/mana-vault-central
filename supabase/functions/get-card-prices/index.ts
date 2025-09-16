@@ -156,7 +156,7 @@ serve(async (req) => {
 
         // Debug if needed:
         console.log("Is rawList array?", Array.isArray(rawList), "length:", rawList.length);
-        console.log("candidates:", JSON.Stringify(candidates, null, 2));
+        console.log("candidates:", candidates);
 
         // Choose the best matching card
         let matched: any | undefined = candidates[0].find((c) => {
