@@ -154,8 +154,7 @@ serve(async (req) => {
 
         // Debug if needed:
         console.log("Is rawList array?", Array.isArray(rawList), "length:", rawList.length);
-        console.log("candidates:", candidates);
-        console.log(candidates);
+        console.log("candidates:", candidates[2]);
 
         // Choose the best matching card
         let matched: any | undefined = candidates.find((c) => {
