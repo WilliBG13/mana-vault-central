@@ -96,12 +96,43 @@ serve(async (req) => {
         const requestedNum = (cardData.collectorNumber || "").toString().trim();
 
         // Build a flat list of candidate cards from various possible shapes
-        const candidates: any[] = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.data)
-            ? data.data
-            : data ? [data] : [];
-        console.log(`candidates:`, JSON.stringify(candidates, null, 2));
+        interface RawVariant {
+          id: string;
+          condition: string;
+          printing: string;
+          language: string;
+          price: number;
+        }
+        interface RawCandidate {
+          id: string;
+          name: string;
+          game: string;
+          set: string;
+          number: string;
+          rarity: string;
+          tcgplayerId: string;
+          details: any;
+          variants: RawVariant[];
+        }
+        interface VariantCandidate {
+          id: string;     // variant id
+          number: string; // parent card number
+          condition: string;
+          printing: string;
+          price: number;
+        }
+        const rawData: RawCandidate[] = /* your JSON */ [];
+        // Flatten into variants that carry the parent’s number
+        const candidates: VariantCandidate[] = rawData.flatMap(card =>
+          card.variants.map(variant => ({
+            id: variant.id,
+            number: card.number,
+            condition: variant.condition,
+            printing: variant.printing,
+            price: variant.price,
+          }))
+                                                              );
+        console.log(candidates);
 
         // Choose the best matching card
         let matched: any | undefined = candidates.find((c) => {
@@ -129,23 +160,10 @@ serve(async (req) => {
             matchedName: matched.name,
             matchedSet: matched.set || matched.setName,
           }));
-
-          type Variant = {
-            number?: string | number;
-            condition?: string;
-            price?: number;
-          };
-          // Small utility to normalize a value (T or T[] or null/undefined) into T[]
-          function normalizeToArray<T>(x: T | T[] | null | undefined): T[] {
-            return x == null ? [] : Array.isArray(x) ? x : [x];
-          }
-          // Flatten all variants from all candidates into a single array
-          const variants: Variant[] = candidates.flatMap(c => normalizeToArray(c.variants));
-          console.log(`variants: `, JSON.stringify(variants[1], null, 2));
           
-          if (variants.length > 0) {
-            const nmVariant = variants.find((v: any) => candidates.number === cardData.collectorNumber);
-            const variant = nmVariant || variants[0];
+          if (candidates.length > 0) {
+            const nmVariant = candidates.find((v: any) => candidates.number === cardData.collectorNumber);
+            const variant = nmVariant || candidates[0];
             price = variant?.price != null ? Number(variant.price) : null;
             console.log(`Using Variant card number ${variant?.number}`);
             console.log(`Using variant for ${cardData.name}:`, JSON.stringify({ condition: variant?.condition, price }));
