@@ -141,7 +141,7 @@ serve(async (req) => {
           }
           // Flatten all variants from all candidates into a single array
           const variants: Variant[] = candidates.flatMap(c => normalizeToArray(c.variants));
-          console.log(`variants: `, JSON.stringify(variants, null, 2));
+          console.log(`variants: `, JSON.stringify(variants[1], null, 2));
           
           if (variants.length > 0) {
             const nmVariant = variants.find((v: any) => candidates.number === cardData.collectorNumber);
