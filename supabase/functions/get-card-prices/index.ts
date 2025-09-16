@@ -106,7 +106,7 @@ serve(async (req) => {
         let matched: any | undefined = candidates.find((c) => {
           const cname = norm(c.name);
           const cset = norm(c.set || c.setName);
-          const cnum = (c.number || c.collectorNumber || c.details?.number || "").toString().trim();
+          const cnum = (c.number || c.collectorNumber || c.variants?.number || "").toString().trim();
           return cname === requestedName && cnum === requestedNum && (!!requestedSet ? cset === requestedSet : true);
         });
 
