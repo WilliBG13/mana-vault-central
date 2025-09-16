@@ -22,6 +22,34 @@ interface CardPrice {
   currency: string;
   error?: string;
 }
+ // Build a flat list of candidate cards from various possible shapes
+interface RawVariant {
+  id: string;
+  condition: string;
+  printing: string;
+  language: string;
+  price: number;
+}
+interface RawCandidate {
+  id: string;
+  name: string;
+  game: string;
+  set: string;
+  number: string;
+  rarity: string;
+  tcgplayerId: string;
+  details: any;
+  variants: RawVariant[] | RawVariant | null | undefined;
+}
+interface VariantCandidate {
+  id: string;     // variant id
+  number: string; // parent card number
+  set: string;
+  name: string;
+  condition: string;
+  printing: string;
+  price: number;
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -57,7 +85,7 @@ serve(async (req) => {
         url.searchParams.append('index', '10'); //return top 10 searches
         url.searchParams.append('include_price_history', 'false'); // disable price history to prevent log truncation
        
-        console.log(`Fetching price for: ${cardData.name} (${cardData.setName || 'Unknown Set'} #${cardData.collectorNumber || 'N/A'}) - Near Mint condition`);
+        console.log(`Fetching price for: ${cardData.name} (${cardData.setName || 'Unknown Set'} #${cardData.collectorNumber || 'N/A'})`);
 
         console.log(`API URL: ${url.toString()}`);
 
@@ -95,32 +123,6 @@ serve(async (req) => {
         const requestedSet = norm(cardData.setName || "");
         const requestedNum = (cardData.collectorNumber || "").toString().trim();
 
-        // Build a flat list of candidate cards from various possible shapes
-        interface RawVariant {
-          id: string;
-          condition: string;
-          printing: string;
-          language: string;
-          price: number;
-        }
-        interface RawCandidate {
-          id: string;
-          name: string;
-          game: string;
-          set: string;
-          number: string;
-          rarity: string;
-          tcgplayerId: string;
-          details: any;
-          variants: RawVariant[] | RawVariant | null | undefined;
-        }
-        interface VariantCandidate {
-          id: string;     // variant id
-          number: string; // parent card number
-          condition: string;
-          printing: string;
-          price: number;
-        }
         const rawList: RawCandidate[] =
           Array.isArray(data)
           ? data as RawCandidate[]
@@ -154,10 +156,10 @@ serve(async (req) => {
 
         // Debug if needed:
         console.log("Is rawList array?", Array.isArray(rawList), "length:", rawList.length);
-        console.log("candidates:", candidates[2]);
+        console.log("candidates:", JSON.Stringify(candidates, null, 2));
 
         // Choose the best matching card
-        let matched: any | undefined = candidates.find((c) => {
+        let matched: any | undefined = candidates[0].find((c) => {
           const cname = norm(c.name);
           const cset = norm(c.set || c.setName);
           
@@ -166,7 +168,7 @@ serve(async (req) => {
 
         if (!matched) {
           // Fallback: match by name + number only
-          matched = candidates.find((c) => {
+          matched = candidates0[0].find((c) => {
             const cname = norm(c.name);
             return cname === requestedName && cnum === requestedNum;
           });
@@ -184,7 +186,7 @@ serve(async (req) => {
           }));
           
           if (candidates.length > 0) {
-            const nmVariant = candidates.find((v: any) => candidates.number === cardData.collectorNumber);
+            const nmVariant = candidates.find((v: any) => v.number === cardData.collectorNumber && v.printing === `normal`); //make sure to change printing once import mapping fixed
             const variant = nmVariant || candidates[0];
             price = variant?.price != null ? Number(variant.price) : null;
             console.log(`Using Variant card number ${variant?.number}`);
