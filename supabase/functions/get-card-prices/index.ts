@@ -112,7 +112,7 @@ serve(async (req) => {
           rarity: string;
           tcgplayerId: string;
           details: any;
-          variants: RawVariant[];
+          variants: RawVariant[] | RawVariant | null | undefined;
         }
         interface VariantCandidate {
           id: string;     // variant id
@@ -121,17 +121,40 @@ serve(async (req) => {
           printing: string;
           price: number;
         }
-        const rawData: RawCandidate[] = [data];
+        const rawList: RawCandidate[] =
+          Array.isArray(data)
+          ? data as RawCandidate[]
+          : (data && typeof data === "object" && Array.isArray((data as any).data))
+          ? (data as any).data as RawCandidate[]
+          : data
+          ? [data as RawCandidate]
+          : [];
         // Flatten into variants that carry the parent’s number
-        const candidates: VariantCandidate[] = rawData.flatMap(card =>
-          card.variants.map(variant => ({
-            id: variant.id,
-            number: card.number,
-            condition: variant.condition,
-            printing: variant.printing,
-            price: variant.price,
-          }))
-                                                              );
+        const candidates: VariantCandidate[] = rawList.reduce<VariantCandidate[]>((acc, card) => {
+          const parentNumber = (card.number ?? "").toString().trim();
+          const variantsArray: RawVariant[] =
+            Array.isArray(card.variants)
+            ? card.variants
+            : card.variants
+            ? [card.variants]
+            : [];
+          for (const variant of variantsArray) {
+            // Optional: runtime guard
+            if (!variant || typeof variant !== "object") continue;
+            acc.push({
+              id: variant.id,
+              number: parentNumber,
+              condition: variant.condition,
+              printing: variant.printing,
+              price: variant.price,
+            });
+          }
+          return acc;
+        }, []);
+
+        // Debug if needed:
+        console.log("Is rawList array?", Array.isArray(rawList), "length:", rawList.length);
+        console.log("candidates:", candidates);
         console.log(candidates);
 
         // Choose the best matching card
