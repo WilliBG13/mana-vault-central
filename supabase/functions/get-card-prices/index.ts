@@ -106,15 +106,14 @@ serve(async (req) => {
         let matched: any | undefined = candidates.find((c) => {
           const cname = norm(c.name);
           const cset = norm(c.set || c.setName);
-          const cnum = (c.number || c.collectorNumber || c.variants?.number || "").toString().trim();
-          return cname === requestedName && cnum === requestedNum && (!!requestedSet ? cset === requestedSet : true);
+          
+          return cname === requestedName && (!!requestedSet ? cset === requestedSet : true);
         });
 
         if (!matched) {
           // Fallback: match by name + number only
           matched = candidates.find((c) => {
             const cname = norm(c.name);
-            const cnum = (c.number || c.collectorNumber || c.details?.number || "").toString().trim();
             return cname === requestedName && cnum === requestedNum;
           });
         }
@@ -133,7 +132,8 @@ serve(async (req) => {
 
           const variants = matched.variants || [];
           if (variants.length > 0) {
-            const nmVariant = variants.find((v: any) => v.condition === 'Near Mint' || v.condition === 'NM' || v.condition === 'Excellent');
+            const vnum = (v.number || v.variants?.number || "").toString().trim();
+            const nmVariant = variants.find((v: any) => v.condition === 'LP' && vnum === requestedNum);
             const variant = nmVariant || variants[0];
             price = variant?.price != null ? Number(variant.price) : null;
             console.log(`Using variant for ${cardData.name}:`, JSON.stringify({ condition: variant?.condition, price }));
