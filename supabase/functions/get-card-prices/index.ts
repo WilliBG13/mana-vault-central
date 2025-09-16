@@ -55,6 +55,7 @@ serve(async (req) => {
         url.searchParams.append('condition', 'Lightly Played', '&'); // Always use Near Mint (excellent) condition
         url.searchParams.append('set', cardData.setName, '&');
         url.searchParams.append('index', '10'); //return top 10 searches
+        url.searchParams.append('include_price_history', 'false'); // disable price history to prevent log truncation
        
         console.log(`Fetching price for: ${cardData.name} (${cardData.setName || 'Unknown Set'} #${cardData.collectorNumber || 'N/A'}) - Near Mint condition`);
 
