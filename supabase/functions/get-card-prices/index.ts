@@ -130,9 +130,17 @@ serve(async (req) => {
             matchedSet: matched.set || matched.setName,
           }));
 
-          const variants: any[] = Array.isArray(candidates.variants)
-          ? candidates.variants
-            : candidates.variants ? [candidates.variants] : [];
+          type Variant = {
+            number?: string | number;
+            condition?: string;
+            price?: number;
+          };
+          // Small utility to normalize a value (T or T[] or null/undefined) into T[]
+          function normalizeToArray<T>(x: T | T[] | null | undefined): T[] {
+            return x == null ? [] : Array.isArray(x) ? x : [x];
+          }
+          // Flatten all variants from all candidates into a single array
+          const variants: Variant[] = candidates.flatMap(c => normalizeToArray(c.variants));
           console.log(`variants: `, JSON.stringify(variants, null, 2));
           
           if (variants.length > 0) {
