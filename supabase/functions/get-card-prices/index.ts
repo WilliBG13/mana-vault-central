@@ -159,7 +159,7 @@ serve(async (req) => {
         }, []);
 
         // Debug if needed:
-        console.log("Is rawList array?", Array.isArray(rawList), "length:", rawList.length);
+        console.log("Is candidates array?", Array.isArray(candidates), "length:", candidates.length);
         console.log("candidates:", candidates);
 
         // Choose the best matching card
@@ -194,7 +194,7 @@ serve(async (req) => {
               const vnum = norm(v.number);
               const vprint = norm(v.printing);
               return vnum === requestedNum && vprint === `normal`); //make sure to change printing once import mapping fixed
-          }
+          });
             const variant = nmVariant || candidates[0];
             price = variant?.price != null ? Number(variant.price) : null;
             console.log(`nmVariant output: ${nmVariant}`);
