@@ -159,7 +159,7 @@ serve(async (req) => {
         console.log("candidates:", candidates);
 
         // Choose the best matching card
-        let matched: any | undefined = candidates[0].find((c) => {
+        let matched: any | undefined = candidates.find((c) => {
           const cname = norm(c.name);
           const cset = norm(c.set || c.setName);
           
@@ -168,7 +168,7 @@ serve(async (req) => {
 
         if (!matched) {
           // Fallback: match by name + number only
-          matched = candidates0[0].find((c) => {
+          matched = candidates.find((c) => {
             const cname = norm(c.name);
             return cname === requestedName && cnum === requestedNum;
           });
