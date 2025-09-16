@@ -144,7 +144,7 @@ serve(async (req) => {
           console.log(`variants: `, JSON.stringify(variants, null, 2));
           
           if (variants.length > 0) {
-            const nmVariant = variants.find((v: any) => v.number === cardData.collectorNumber);
+            const nmVariant = variants.find((v: any) => candidates.number === cardData.collectorNumber);
             const variant = nmVariant || variants[0];
             price = variant?.price != null ? Number(variant.price) : null;
             console.log(`Using Variant card number ${variant?.number}`);
