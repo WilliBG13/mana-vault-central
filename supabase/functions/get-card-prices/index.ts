@@ -132,7 +132,7 @@ serve(async (req) => {
 
           const variants = matched.variants || [];
           if (variants.length > 0) {
-            const vnum = (v.number || v.variants?.number || "").toString().trim();
+            const vnum = (variants.number || "").toString().trim();
             const nmVariant = variants.find((v: any) => v.condition === 'LP' && vnum === requestedNum);
             const variant = nmVariant || variants[0];
             price = variant?.price != null ? Number(variant.price) : null;
