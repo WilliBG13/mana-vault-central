@@ -193,8 +193,9 @@ serve(async (req) => {
             const nmVariant = candidates.find((v: VariantCandidate) => {
               const vnum = norm(v.number);
               const vprint = norm(v.printing);
-              return vnum === requestedNum && vprint === `normal`); //make sure to change printing once import mapping fixed
-          });
+              const rNum = norm(requestedNum);
+              return vnum === rNum && vprint === "normal"; //make sure to change printing once import mapping fixed
+            });
             const variant = nmVariant || candidates[0];
             price = variant?.price != null ? Number(variant.price) : null;
             console.log(`nmVariant output: ${nmVariant}`);
